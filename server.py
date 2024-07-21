@@ -14,3 +14,10 @@ class ProtocolHandler(object):
     def write_response(self, socket_file, data):
         pass
     
+class Server(object):
+    def __init__(self, host='127.0.0.1', port=31337, max_clients=40):
+        self.pool = Pool(max_clients)
+        self.server = StreamServer((host, port), self.connection_handler, spawn=self.pool)
+        
+        self.protocol=ProtocolHandler()
+        self.kv= {}
