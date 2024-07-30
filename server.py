@@ -1,6 +1,9 @@
 from collections import namedtuple
 
-# Two types of errors that can occur while processing requests
+from gevent.pool import Pool
+from gevent.server import StreamServer
+
+# Errors that can occur while processing requests
 class CommandError(Exception): pass
 class DisconnectionError(Exception): pass
 
@@ -21,3 +24,12 @@ class Server(object):
         
         self.protocol=ProtocolHandler()
         self.kv= {}
+    
+    def connection_handler(self, conn, address):
+        
+        
+        
+    def get_response(self, data):
+        pass
+    
+    
