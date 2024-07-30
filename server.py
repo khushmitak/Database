@@ -1,7 +1,10 @@
-from collections import namedtuple
-
+from gevent import socket
 from gevent.pool import Pool
 from gevent.server import StreamServer
+
+from collections import namedtuple
+from io import BytesIO
+from socket import error as socket_error
 
 # Errors that can occur while processing requests
 class CommandError(Exception): pass
@@ -25,11 +28,28 @@ class Server:
         self.protocol=ProtocolHandler()
         self.kv= {}
     
+    # for handling individual client connections
     def connection_handler(self, conn, address):
+        socket_file = conn.makefile('rwb')
         
-        
+        while True:
+            try:
+                data = self.protocol.handle_requests(socket_file)
+            except DisconnectionError:
+                break
+            
+            try:
+                response = self.get_response(data)
+            except CommandError as exc:
+                response = Error(exc.args[0])
+                
+            # after handling requests and generating response, send the response to the client
+            self.protocol.write_response(socket_file, response)
         
     def get_response(self, data):
         pass
+    
+    def run(self):
+        self.server.serve_forever()
     
     
