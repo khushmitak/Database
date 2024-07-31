@@ -14,6 +14,15 @@ Error = namedtuple('Error', ('message',))
 
 # a class for parsing incoming requests and outgoing responses
 class ProtocolHandler:
+    # Redis protocols that supports different data types
+    def __init__(self): {
+        '+': self.handle_simple_string,
+        '-': self.handle_error,
+        ':': self.handle_integer,
+        '$': self.handle_string,
+        '*': self.handle_array,
+        '%': self.handle_dict}  
+        
     def handle_requests(self, socket_file):
         pass
     
