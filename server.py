@@ -22,7 +22,7 @@ class ProtocolHandler:
         ':': self.handle_integer,
         '$': self.handle_string,
         '*': self.handle_array,
-        '%': self.handle_dict}  
+        '%': self.handle_dictionary}  
         
     def handle_requests(self, socket_file):
         first_byte = socket_file.read(1)
@@ -43,9 +43,26 @@ class ProtocolHandler:
     def handle_integer(self, socket_file):
         return int(socket_file.readline().rstrip('\r\n'))
     
+    def handle_string(self, socket_file): #for bulky strings
+        length = int(socket_file.readline().rstrip('\r\n'))
+        if (length == -1):
+            return None
+        length += 2
+        return socket_file.read(length)[:-2]
+        
+    def handle_array(self, socket_file):
+        number_elements = int(socket_file.readline().rstrip('\r\n'))
+        return [self.handle_requests(socket_file) for _ in range(number_elements)]
+        
+    def handle_dictionary(self, socket_file):
+        number_items = int(socket_file.readline().rstrip('\r\n'))
+        elements = [self.handle_requests(socket_file) for _ in range(number_items * 2)]
+        
+        return dict(zip(elements[::2], elements[1::2]))
+        
     def write_response(self, socket_file, data):
         pass
-    
+   
 class Server:
     def __init__(self, host='127.0.0.1', port=31337, max_clients=64):
         self.pool = Pool(max_clients)
@@ -77,5 +94,3 @@ class Server:
     
     def run(self):
         self.server.serve_forever()
-    
-    
