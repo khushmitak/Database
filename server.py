@@ -29,6 +29,15 @@ class ProtocolHandler:
     def write_response(self, socket_file, data):
         pass
     
+    def handle_simple_string(self, socket_file):
+        return socket_file.readline().rstrip('\r\n')
+
+    def handle_error(self, socket_file):
+        return Error(socket_file.readline().rstrip('\r\n'))
+
+    def handle_integer(self, socket_file):
+        return int(socket_file.readline().rstrip('\r\n'))
+    
 class Server:
     def __init__(self, host='127.0.0.1', port=31337, max_clients=64):
         self.pool = Pool(max_clients)
