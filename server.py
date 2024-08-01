@@ -12,7 +12,7 @@ class DisconnectionError(Exception): pass
 
 Error = namedtuple('Error', ('message',))
 
-# a class for parsing incoming requests and outgoing responses
+# a class for processing incoming requests and outgoing responses
 class ProtocolHandler:
     # Redis protocols that supports different data types
     def __init__(self): 
@@ -25,10 +25,14 @@ class ProtocolHandler:
         '%': self.handle_dict}  
         
     def handle_requests(self, socket_file):
-        pass
-    
-    def write_response(self, socket_file, data):
-        pass
+        first_byte = socket_file.read(1)
+        if not first_byte: #if first byte is empty, client has disconnected
+            raise DisconnectionError()
+        
+        try:
+            return self.handlers[first_byte](socket_file)
+        except KeyError: #error if first byte is not a key in the self handlers dictionary
+            raise CommandError('Bad Request')
     
     def handle_simple_string(self, socket_file):
         return socket_file.readline().rstrip('\r\n')
@@ -38,6 +42,9 @@ class ProtocolHandler:
 
     def handle_integer(self, socket_file):
         return int(socket_file.readline().rstrip('\r\n'))
+    
+    def write_response(self, socket_file, data):
+        pass
     
 class Server:
     def __init__(self, host='127.0.0.1', port=31337, max_clients=64):
