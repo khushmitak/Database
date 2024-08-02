@@ -184,7 +184,25 @@ class Client:
 
     def execute(self, *args):
         self.protocol.write_response(self.fh, args)
-        response = self.protocol.handle_request(self.fh)
+        response = self.protocol.handle_requests(self.fh)
         if isinstance(response, Error):
             raise CommandError(response.message)
         return response
+    
+    def get(self, key):
+        return self.execute('GET', key)
+    
+    def set(self, key, value):
+        return self.execute('SET', key, value)
+    
+    def delete(self, key):
+        return self.execute('DELETE', key)
+
+    def flush(self):
+        return self.execute('FLUSH')
+
+    def mget(self, *keys):
+        return self.execute('MGET', *keys)
+
+    def mset(self, *items):
+        return self.execute('MSET', *items)
