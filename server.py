@@ -144,6 +144,33 @@ class Server:
             raise CommandError('Unrecognized command: %s' % command)
 
         return self.commands[command](*data[1:])
+    
+    def get(self, key):
+        return self.kv.get(key)
+    
+    def set(self, key, value):
+        self.kv[key] = value
+        return 1
+    
+    def delete(self, key):
+        if key in self.kv:
+            del self.kv[key]
+            return 1
+        return 0
+    
+    def flush(self):
+        kvlength = len(self.kv)
+        self.kv.clear()
+        return kvlength
+    
+    def mget(self, *keys):
+        return [self.kv.get(key) for key in keys]
+    
+    def mset (self, *items):
+        data = zip(items[::2], items[1::2])
+        for key, value in data:
+            self._kv[key] = value
+        return len(data)
         
     def run(self):
         self.server.serve_forever()
