@@ -12,7 +12,6 @@ class DisconnectionError(Exception): pass
 
 Error = namedtuple('Error', ('message',))
 
-# a class for processing incoming requests and outgoing responses
 class ProtocolHandler:
     # Redis protocols that supports different data types
     def __init__(self): 
@@ -102,15 +101,6 @@ class Server:
         
         self.commands = self.get_commands()
     
-    def get_commands(self):
-        return {
-            'GET': self.get,
-            'SET': self.set,
-            'DELETE': self.delete,
-            'FLUSH': self.flush,
-            'MGET': self.mget,
-            'MSET': self.mset}
-    
     # for handling individual client connections
     def connection_handler(self, conn, address):
         socket_file = conn.makefile('rwb')
@@ -128,7 +118,17 @@ class Server:
                 
             # after handling requests and generating response, send the response to the client
             self.protocol.write_response(socket_file, response)
-        
+    
+    def get_commands(self):
+        return {
+            'GET': self.get,
+            'SET': self.set,
+            'DELETE': self.delete,
+            'FLUSH': self.flush,
+            'MGET': self.mget,
+            'MSET': self.mset}
+    
+    # a method for processing incoming requests and outgoing responses
     def get_response(self, data):
         if not isinstance(data, list):
             try:
