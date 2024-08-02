@@ -99,6 +99,17 @@ class Server:
         
         self.protocol=ProtocolHandler()
         self.kv= {}
+        
+        self.commands = self.get_commands()
+    
+    def get_commands(self):
+        return {
+            'GET': self.get,
+            'SET': self.set,
+            'DELETE': self.delete,
+            'FLUSH': self.flush,
+            'MGET': self.mget,
+            'MSET': self.mset}
     
     # for handling individual client connections
     def connection_handler(self, conn, address):
@@ -119,7 +130,20 @@ class Server:
             self.protocol.write_response(socket_file, response)
         
     def get_response(self, data):
-        pass
-    
+        if not isinstance(data, list):
+            try:
+                data = data.split()
+            except:
+                raise CommandError('Request must be a simple string or a list')
+        
+        if not data:
+            raise CommandError('Missing command')
+        
+        command = data[0].upper()
+        if command not in self.commands:
+            raise CommandError('Unrecognized command: %s' % command)
+
+        return self.commands[command](*data[1:])
+        
     def run(self):
         self.server.serve_forever()
