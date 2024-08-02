@@ -61,7 +61,36 @@ class ProtocolHandler:
         return dict(zip(elements[::2], elements[1::2]))
         
     def write_response(self, socket_file, data):
-        pass
+        buffer = BytesIO()
+        self.write(buffer, data)
+        buffer.seek(0)
+        socket_file.write(buffer.getvalue())
+        socket_file.flush()
+    
+    def write(self, buffer, data):
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+        
+        if isinstance(data, bytes):
+            buffer.write('$%s\r\n%s' % (len(data), data))
+        elif isinstance(data, int):
+            buffer.write(':%s\r\n' % data)
+        elif isinstance(data, Error):
+            buffer.write('-%s\r\n' % Error.message)
+        elif isinstance(data, (list, tuple)):
+            buffer.write('*%s\r\n' % len(data))
+            for item in data:
+                self._write(buffer, item)
+        elif isinstance(data, dict):
+            buffer.write('%%%s\r\n' % len(data))
+            for key in data:
+                self._write(buffer, key)
+                self._write(buffer, data[key])
+        elif data is None:
+            buffer.write('$-1\r\n')
+        else:
+            raise CommandError('unrecognized type: %s' % type(data))
+            
    
 class Server:
     def __init__(self, host='127.0.0.1', port=31337, max_clients=64):
